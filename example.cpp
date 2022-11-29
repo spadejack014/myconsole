@@ -112,11 +112,11 @@ int main(int argc, char **argv)
 
         writeAddr.sin_family = AF_INET;
         writeAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-        writeAddr.sin_port = htons(1919);
+        writeAddr.sin_port = htons(1234);
 
         readAddr.sin_family = AF_INET;
         readAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-        readAddr.sin_port = htons(1918);
+        readAddr.sin_port = htons(1235);
 
 
         if (bind(writefd, (sockaddr *)&writeAddr, sizeof(writeAddr)) == -1) {

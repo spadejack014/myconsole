@@ -12,6 +12,39 @@ A minimal, zero-config, MIT licensed, REPL used in Windows/Linux, supports conne
 - `char* help`:               prompt text returned after send the [help] command
 - `const char* content`:      The result need sending to the write_fd
 
+```cpp
+//if you want to run it in a Windows terminal, Linux shell
+writefd = fileno(stdout);
+readfd = fileno(stdin);
+
+//or connect it via UDP socket
+if( (writefd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ){
+    perror("socket(writefd) error");
+    exit(1);
+}
+if( (readfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ){
+    perror("socket(readfd) error");
+    exit(1);
+}
+struct sockaddr_in readAddr, writeAddr;
+
+writeAddr.sin_family = AF_INET;
+writeAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+writeAddr.sin_port = htons(1234);
+
+readAddr.sin_family = AF_INET;
+readAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+readAddr.sin_port = htons(1235);
+
+if (bind(writefd, (sockaddr *)&writeAddr, sizeof(writeAddr)) == -1) {
+    perror("bind failed: writefd");
+}
+
+if (bind(readfd, (sockaddr *)&readAddr, sizeof(readAddr)) == -1) {
+    perror("bind failed: readfd");
+}
+```
+
 ## The API
 
 ### Init
@@ -60,4 +93,3 @@ int myconsole_recv_command(int read_fd,int write_fd);
 
 - Main API(a loop) for receiving and processing commands.
 - The file descriptor should be a udp socket or standard output.
-
