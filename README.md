@@ -46,7 +46,7 @@ int test_callback(int socket_id, int argc, char **argv)
     }
     }else{
         myprintf(socket_id,"test usage:");
-        myprintf(socket_id,"\ttest [x] [y] \t--get the value");
+        myprintf(socket_id,"\ttest [param1] [param2] \t--func info");
     }
     return 0;
 }
