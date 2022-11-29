@@ -61,8 +61,8 @@ int showAll_callback(int socket_id, int argc, char **argv)
         string tmp = "1,2,3\n4,5,6\n7,8,9";
         myprintf(socket_id,tmp.c_str());
     }else{
-        myprintf(socket_id,"test usage:");
-        myprintf(socket_id,"\ttest \t--get all value");
+        myprintf(socket_id,"all usage:");
+        myprintf(socket_id,"\tall \t--get all value");
     }
     return 0;
 }
