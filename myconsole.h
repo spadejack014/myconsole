@@ -40,8 +40,9 @@ using namespace std;
 
 #ifdef _WIN32
     #include <io.h>
+    #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-    #include <winsock.h>
+    #include <winsock2.h>
     #include <WS2tcpip.h>
 #else
     #include <sys/socket.h>

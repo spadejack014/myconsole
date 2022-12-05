@@ -28,7 +28,7 @@
  * SOFTWARE.
 */
 #include <iostream>
-#include <myconsole.h>
+#include "myconsole.h"
 
 using namespace std;
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
     int writefd = 0;
     int readfd = 0;
-    if(argc==1){
+    if(argc!=1){
         writefd = fileno(stdout);
         readfd = fileno(stdin);
     }else{
