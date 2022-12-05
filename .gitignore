@@ -1,0 +1,9 @@
+
+.qmake.stash
+.vscode/c_cpp_properties.json
+*.json
+*.Debug
+*.Release
+*.o
+*.user
+Makefile
