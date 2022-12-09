@@ -18,31 +18,22 @@ writefd = fileno(stdout);
 readfd = fileno(stdin);
 
 //or connect it via UDP socket
-if( (writefd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ){
-    perror("socket(writefd) error");
-    exit(1);
-}
+//should after daemonize();
 if( (readfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ){
     perror("socket(readfd) error");
     exit(1);
 }
-struct sockaddr_in readAddr, writeAddr;
-
-writeAddr.sin_family = AF_INET;
-writeAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-writeAddr.sin_port = htons(1234);
+struct sockaddr_in readAddr;
 
 readAddr.sin_family = AF_INET;
 readAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 readAddr.sin_port = htons(1235);
 
-if (bind(writefd, (sockaddr *)&writeAddr, sizeof(writeAddr)) == -1) {
-    perror("bind failed: writefd");
-}
 
 if (bind(readfd, (sockaddr *)&readAddr, sizeof(readAddr)) == -1) {
     perror("bind failed: readfd");
 }
+writefd=readfd;
 ```
 
 ## The API
