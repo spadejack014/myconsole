@@ -149,9 +149,6 @@ int myprintf(int write_fd, const char* content)
     }
     else{
         int ret = sendto(write_fd,content,strlen(content),0,(sockaddr*)&from,sizeof(from));
-        if(0!=strcmp(content,myconsole_prompt.c_str())){
-            sendto(write_fd,"\n",sizeof ("\n"),0,(sockaddr*)&from,sizeof(from));
-        }
         return ret;
     }
 }
