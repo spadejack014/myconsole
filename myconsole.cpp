@@ -140,7 +140,7 @@ int myprintf(int write_fd, const char* content)
 {
     if(write_fd == 0)
         return -1;
-    else if (write_fd<=3){
+    else if (write_fd<3){
         fputs(content,stdout);
         if(0!=strcmp(content,myconsole_prompt.c_str())){
             fputs("\n",stdout);
@@ -202,7 +202,7 @@ int myconsole_help(int write_fd, int argc, char **argv)
 int myconsole_caption(int write_fd, int argc, char **argv)
 {
     if(argc == 1){
-        if(write_fd<=3)
+        if(write_fd<3)
             myprintf(write_fd,"connected by console!!!");
         else
             myprintf(write_fd,"connected by udp!!!");
