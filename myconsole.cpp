@@ -1,4 +1,4 @@
-/**
+ /**
  * myconsole.cpp -- VERSION 1.0
  *
  * A minimal, zero-config, MIT licensed, REPL used in Windows/Linux,
@@ -31,6 +31,7 @@
 
 #include "myconsole.h"
 #include <sstream>
+#include <unistd.h>
 typedef struct command_struct{
     CONSOLE_COMMAND_FP func;
     string help;
@@ -46,6 +47,10 @@ int myconsole_help(int write_fd, int argc, char **argv);
 int myconsole_caption(int write_fd, int argc, char **argv);
 
 int myconsole_prase_command(int write_fd, int argc, char **argv);
+
+void myconsole_prase_in_console(int read_fd, int write_fd);
+
+void myconsole_prase_in_network(int read_fd, int write_fd);
 
 int myconsole_init(char *prompt,int write_fd)
 {
@@ -78,58 +83,15 @@ int myconsole_recv_command(int read_fd,int write_fd)
     tv.tv_usec = 0;
     fd_set fds;
     while(true){
-        if(read_fd==0){
-            string command,word;
-            getline(cin, command);
-            command.erase(0,command.find_first_not_of(" "));
-            command.erase(command.find_last_not_of(" ") + 1);
-            int count = 1;
-            for (int i = 0; (i = command.find(' ', i)) != std::string::npos; i++) {
-                count++;
-            }
-            char **argv;
-            argv=(char **) malloc( count*sizeof(char *) );
-            int i = 0;
-            for ( std::istringstream is( command ); is >> word; )
-            {
-                argv[i]=(char *)malloc(100);
-                strcpy(argv[i],word.c_str());
-                i++;
-            }
-            myconsole_prase_command(write_fd,count,argv);
-            for( i=0;i<count;i++ ) //释放内存
-                    free(argv[i]);
-            free(argv);
-        }else{
-            FD_ZERO(&fds);
-            FD_SET(read_fd,&fds);
-            int ret = select(read_fd+1,&fds,nullptr,nullptr,nullptr);
-            if(ret >0){
-                char buf[1024]={};
-                int ret = recvfrom(read_fd,buf,1024,0,(sockaddr *)&from,&len);
-                if(ret <= 0)
-                    continue;
-                string command = buf;
-                command.erase(0,command.find_first_not_of(" "));
-                command.erase(command.find_last_not_of(" ") + 1);
-                string word;
-                int count = 1;
-                for (int i = 0; (i = command.find(' ', i)) != std::string::npos; i++) {
-                    count++;
+        FD_ZERO(&fds);
+        FD_SET(read_fd,&fds);
+        if(select(read_fd+1,&fds,nullptr,nullptr,nullptr)>0){
+            if(FD_ISSET(read_fd,&fds)!=0){
+                if(read_fd==fileno(stdin)){
+                    myconsole_prase_in_console(read_fd,write_fd);
+                }else{
+                    myconsole_prase_in_network(read_fd,write_fd);
                 }
-                char **argv;
-                argv=(char **) malloc( count*sizeof(char *) );
-                int i = 0;
-                for ( std::istringstream is( command ); is >> word; )
-                {
-                    argv[i]=(char *)malloc(100);
-                    strcpy(argv[i],word.c_str());
-                    i++;
-                }
-                myconsole_prase_command(write_fd,count,argv);
-                for( i=0;i<count;i++ ) //释放内存
-                        free(argv[i]);
-                free(argv);
             }
         }
     }
@@ -152,7 +114,6 @@ int myprintf(int write_fd, const char* content)
         return ret;
     }
 }
-
 
 int myconsole_help(int write_fd, int argc, char **argv)
 {
@@ -221,7 +182,8 @@ int myconsole_prase_command(int write_fd, int argc, char **argv)
         }
         CONSOLE_COMMAND_FP tgt_func = command_map[tgt_command].func;
         tgt_func(write_fd,argc,argv);
-        myprintf(write_fd, myconsole_prompt.c_str());
+        if(write_fd==fileno(stdout))
+            myprintf(write_fd, myconsole_prompt.c_str());
         return 0;
     }else{
         return -1;
@@ -229,3 +191,70 @@ int myconsole_prase_command(int write_fd, int argc, char **argv)
 }
 
 
+void myconsole_prase_in_console(int read_fd, int write_fd)
+{
+    string command,word;
+    char buf[300]={0};
+    int n = read(read_fd,buf,300);
+    command = buf;
+    if(command == "\n"){
+        myprintf(write_fd,myconsole_prompt.c_str());
+        return;
+    }
+    command.erase(0,command.find_first_not_of(" "));
+    command.erase(command.find_last_not_of(" ") + 1);
+    int count = 1;
+    for (int i = 0; (i = command.find(' ', i)) != std::string::npos; i++) {
+        count++;
+    }
+    char **argv;
+    argv=(char **) malloc( count*sizeof(char *) );
+    int i = 0;
+    for ( std::istringstream is( command ); is >> word; )
+    {
+        argv[i]=(char *)malloc(100);
+        strcpy(argv[i],word.c_str());
+        i++;
+    }
+    int ret = myconsole_prase_command(write_fd,count,argv);
+    if(ret == 0){
+        for( i=0;i<count;i++ ) //释放内存
+                free(argv[i]);
+        free(argv);
+    }
+}
+
+void myconsole_prase_in_network(int read_fd, int write_fd)
+{
+    char buf[1024]={0};
+    int ret = recvfrom(read_fd,buf,1024,0,(sockaddr *)&from,&len);
+    if(ret <= 0)
+        return;
+    string command = buf;
+    if(command == "\n"){
+        myprintf(write_fd,myconsole_prompt.c_str());
+        return;
+    }
+    command.erase(0,command.find_first_not_of(" "));
+    command.erase(command.find_last_not_of(" ") + 1);
+    string word;
+    int count = 1;
+    for (int i = 0; (i = command.find(' ', i)) != std::string::npos; i++) {
+        count++;
+    }
+    char **argv;
+    argv=(char **) malloc( count*sizeof(char *) );
+    int i = 0;
+    for ( std::istringstream is( command ); is >> word; )
+    {
+        argv[i]=(char *)malloc(100);
+        strcpy(argv[i],word.c_str());
+        i++;
+    }
+    int iret = myconsole_prase_command(write_fd,count,argv);
+    if(iret == 0){
+        for( i=0;i<count;i++ ) //释放内存
+                free(argv[i]);
+        free(argv);
+    }
+}
